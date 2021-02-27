@@ -113,7 +113,7 @@
   - meterpreter = Architecture for os
       - ps -A x86_64 -s 
       - migrate [pid]
-  # Piovating
+  #  Pivoting
    - meterpreter> run autoroute -s IP/24
    - Ping-sweep the network
       - meterpreter > run arp_scanner -r IP/24
